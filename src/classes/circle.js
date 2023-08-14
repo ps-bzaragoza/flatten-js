@@ -6,18 +6,22 @@
 
 import Flatten from '../flatten';
 import * as Intersection from '../algorithms/intersection';
+import {convertToString} from "../utils/attributes";
+import {Shape} from "./shape";
+import {Matrix} from "./matrix";
 
 /**
  * Class representing a circle
  * @type {Circle}
  */
-export class Circle {
+export class Circle extends Shape {
     /**
      *
      * @param {Point} pc - circle center point
      * @param {number} r - circle radius
      */
     constructor(...args) {
+        super()
         /**
          * Circle center
          * @type {Point}
@@ -113,6 +117,29 @@ export class Circle {
     }
 
     /**
+     * Method scale is supported only for uniform scaling of the circle with (0,0) center
+     * @param {number} sx
+     * @param {number} sy
+     * @returns {Circle}
+     */
+    scale(sx, sy) {
+        if (sx !== sy)
+            throw Flatten.Errors.OPERATION_IS_NOT_SUPPORTED
+        if (!(this.pc.x === 0.0 && this.pc.y === 0.0))
+            throw Flatten.Errors.OPERATION_IS_NOT_SUPPORTED
+        return new Flatten.Circle(this.pc, this.r*sx)
+    }
+
+    /**
+     * Return new circle transformed using affine transformation matrix
+     * @param {Matrix} matrix - affine transformation matrix
+     * @returns {Circle}
+     */
+    transform(matrix = new Flatten.Matrix()) {
+        return new Flatten.Circle(this.pc.transform(matrix), this.r)
+    }
+
+    /**
      * Returns array of intersection points between circle and other shape
      * @param {Shape} shape Shape of the one of supported types
      * @returns {Point[]}
@@ -203,21 +230,15 @@ export class Circle {
 
     /**
      * Return string to draw circle in svg
-     * @param {Object} attrs - an object with attributes of svg circle element,
-     * like "stroke", "strokeWidth", "fill" <br/>
-     * Defaults are stroke:"black", strokeWidth:"1", fill:"none"
+     * @param {Object} attrs - an object with attributes of svg circle element
      * @returns {string}
      */
     svg(attrs = {}) {
-        let {stroke, strokeWidth, fill, fillOpacity, id, className} = attrs;
-        // let rest_str = Object.keys(rest).reduce( (acc, key) => acc += ` ${key}="${rest[key]}"`, "");
-        let id_str = (id && id.length > 0) ? `id="${id}"` : "";
-        let class_str = (className && className.length > 0) ? `class="${className}"` : "";
-
-        return `\n<circle cx="${this.pc.x}" cy="${this.pc.y}" r="${this.r}" stroke="${stroke || "black"}" stroke-width="${strokeWidth || 1}" fill="${fill || "none"}" fill-opacity="${fillOpacity || 1.0}" ${id_str} ${class_str} />`;
+        return `\n<circle cx="${this.pc.x}" cy="${this.pc.y}" r="${this.r}"
+                ${convertToString({fill: "none", ...attrs})} />`;
     }
 
-};
+}
 
 Flatten.Circle = Circle;
 /**
